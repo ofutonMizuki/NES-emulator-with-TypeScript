@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "ES6", // 出力する JavaScript のバージョン (ES6 以降がおすすめ)
+        "module": "ESNext", // モジュールシステム (ESNext がおすすめ)
+        "lib": [
+            "DOM",
+            "ESNext"
+        ], // 使用するライブラリ (ブラウザで動作させるので DOM は必須)
+        "outDir": "./dist", // コンパイルされた JavaScript ファイルの出力先
+        "sourceMap": true, // ソースマップを生成 (デバッグ時に便利)
+        "strict": true, // 厳格な型チェックを有効にする
+        "esModuleInterop": true, // CommonJS モジュールとの相互運用性を向上させる
+        "moduleResolution": "node", // モジュール解決方法を node にする
+        "noImplicitAny": true, // 暗黙的な any 型をエラーにする
+    },
+    "include": [
+        "src/**/*"
+    ] // コンパイル対象のファイル (src ディレクトリ以下を対象とする)
+}
