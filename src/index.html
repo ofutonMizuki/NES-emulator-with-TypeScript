@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <title>NES Emulator</title>
-  </head>
-  <body>
-    <canvas id="screen" width="256" height="240"></canvas>
+</head>
+
+<body>
+    <div id="main_section">
+        <canvas id="screen" width="256" height="240"></canvas>
+    </div>
+    <div>
+        <label>ROMファイル</label>
+
+        <input type="file" id="romData" accept=".nes" />
+    </div>
     <script src="bundle.js"></script>
-  </body>
+</body>
+
 </html>
