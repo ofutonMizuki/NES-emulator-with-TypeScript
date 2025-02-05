@@ -106,7 +106,7 @@ class CPURegister {
     }
 
     /**
-     * ステータスレジスタ(真偽値)を取得
+     * ステータスレジスタ(真偽値)を設定
      */
     set statusRegisterBits(value: statusRegisterBits) {
         let status = 0;
@@ -126,6 +126,8 @@ class CPURegister {
 export class CPU {
     private _register: CPURegister;
     constructor() {
+        //レジスタの初期化
+        //起動時は固定値
         this._register = new CPURegister();
         this._register.accumulator = 0;
         this._register.indexRegisterX = 0;
@@ -140,6 +142,39 @@ export class CPU {
             I: true,
             Z: false,
             C: false
+        }
+    }
+
+    private readMemory(address: number) {
+        if (address < 0x0800) {
+            //WRAM
+        }
+        else if (address < 0x2000) {
+            //WRAM
+        }
+        else if (address < 0x2008) {
+            //PPUレジスタ
+        }
+        else if (address < 0x4000) {
+            //PPUレジスタ
+        }
+        else if (address < 0x4020) {
+            //APU, PAD
+        }
+        else if (address < 0x6000) {
+            //拡張ROM
+        }
+        else if (address < 0x8000) {
+            //拡張RAM
+        }
+        else if (address < 0xC000) {
+            //ROM
+        }
+        else if (address < 0x10000) {
+            //ROM
+        }
+        else{
+            throw new Error("Memory is out of range");
         }
     }
 }
