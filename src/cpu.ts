@@ -50,6 +50,45 @@ class CPURegister {
         this._accumulator = value;
     }
 
+    get indexRegisterX(): number {
+        return this._indexRegisterX;
+    }
+
+    set indexRegisterX(value: number) {
+        //オーバーフローのチェック
+        if ((value & (~0xFF)) != 0) {
+            throw new Error("IndexRegisterX overflow");
+        }
+
+        this._indexRegisterX = value;
+    }
+
+    get indexRegisterY(): number {
+        return this._indexRegisterY;
+    }
+
+    set indexRegisterY(value: number) {
+        //オーバーフローのチェック
+        if ((value & (~0xFF)) != 0) {
+            throw new Error("IndexRegisterY overflow");
+        }
+
+        this._indexRegisterY = value;
+    }
+
+    get stackPointer(): number {
+        return this._stackPointer;
+    }
+
+    set stackPointer(value: number) {
+        //オーバーフローのチェック
+        if ((value & (~0xFF)) != 0) {
+            throw new Error("StackPointer overflow");
+        }
+
+        this._stackPointer = value;
+    }
+
     /**
      * ステータスレジスタ(真偽値)を取得
      */
@@ -65,11 +104,42 @@ class CPURegister {
             C: Boolean((this._statusRegister >> 0) & 0x01)
         }
     }
+
+    /**
+     * ステータスレジスタ(真偽値)を取得
+     */
+    set statusRegisterBits(value: statusRegisterBits) {
+        let status = 0;
+        status |= (Number(value.N) << 7);
+        status |= (Number(value.V) << 6);
+        status |= (Number(value.R) << 5);
+        status |= (Number(value.B) << 4);
+        status |= (Number(value.D) << 3);
+        status |= (Number(value.I) << 2);
+        status |= (Number(value.Z) << 1);
+        status |= (Number(value.C) << 0);
+
+        this._statusRegister = status;
+    }
 }
 
 export class CPU {
     private _register: CPURegister;
     constructor() {
         this._register = new CPURegister();
+        this._register.accumulator = 0;
+        this._register.indexRegisterX = 0;
+        this._register.indexRegisterY = 0;
+        this._register.stackPointer = -3 & 0xFF;
+        this._register.statusRegisterBits = {
+            N: false,
+            V: false,
+            R: false,
+            B: false,
+            D: false,
+            I: true,
+            Z: false,
+            C: false
+        }
     }
 }
