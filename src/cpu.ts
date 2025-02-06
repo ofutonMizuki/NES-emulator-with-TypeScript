@@ -1,3 +1,5 @@
+import { RAM } from "./ram";
+
 /**
  * ステータスレジスタ(真偽値)
  * 
@@ -125,7 +127,8 @@ class CPURegister {
 
 export class CPU {
     private _register: CPURegister;
-    constructor() {
+    private _wram: RAM; //メインメモリ
+    constructor(wram: RAM) {
         //レジスタの初期化
         //起動時は固定値
         this._register = new CPURegister();
@@ -143,10 +146,12 @@ export class CPU {
             Z: false,
             C: false
         }
+        this._wram = new RAM();
     }
 
     private readMemory(address: number) {
         if (address < 0x0800) {
+            this._wram.read(address);
             //WRAM
         }
         else if (address < 0x2000) {

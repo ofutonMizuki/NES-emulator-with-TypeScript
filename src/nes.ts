@@ -9,8 +9,8 @@ export class NES {
     private _wram: RAM;
     private _vram: RAM;
     constructor() {
-        this._cpu = new CPU();
         this._wram = new RAM();
         this._vram = new RAM();
+        this._cpu = new CPU(this._wram);
     }
 }
