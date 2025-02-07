@@ -91,6 +91,19 @@ class CPURegister {
         this._stackPointer = value;
     }
 
+    get programCounter(): number {
+        return this._programCounter;
+    }
+
+    set programCounter(value: number) {
+        //オーバーフローのチェック
+        if ((value & (~0xFFFF)) != 0) {
+            throw new Error("ProgramCounter overflow");
+        }
+
+        this._programCounter = value;
+    }
+
     /**
      * ステータスレジスタ(真偽値)を取得
      */
@@ -136,6 +149,7 @@ export class CPU {
         this._register.indexRegisterX = 0;
         this._register.indexRegisterY = 0;
         this._register.stackPointer = 0xFD;
+        this._register.programCounter = this.readMemory(0xFFFC) | (this.readMemory(0xFFFD) << 8);
         this._register.statusRegisterBits = {
             N: false,
             V: false,
@@ -149,9 +163,9 @@ export class CPU {
         this._wram = new RAM();
     }
 
-    private readMemory(address: number) {
+    private readMemory(address: number): number {
         if (address < 0x0800) {
-            this._wram.read(address);
+            return this._wram.read(address);
             //WRAM
         }
         else if (address < 0x2000) {
@@ -181,5 +195,7 @@ export class CPU {
         else{
             throw new Error("Memory is out of range");
         }
+
+        return 0;
     }
 }
