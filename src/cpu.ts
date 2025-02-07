@@ -135,7 +135,7 @@ export class CPU {
         this._register.accumulator = 0;
         this._register.indexRegisterX = 0;
         this._register.indexRegisterY = 0;
-        this._register.stackPointer = -3 & 0xFF;
+        this._register.stackPointer = 0xFD;
         this._register.statusRegisterBits = {
             N: false,
             V: false,
