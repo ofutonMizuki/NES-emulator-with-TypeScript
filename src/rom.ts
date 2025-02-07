@@ -44,16 +44,34 @@ export class ROM {
             context.fillStyle = "black";
             context.fillRect(0, 0, 256, 256);
 
-            this._chrrom.forEach((value, index) => {
-                let x = Math.floor(index / 8);
-                let y = Math.floor(index / 128);
-                for (let i = 0; i < 8; i++) {
-                    if (value >> i & 0x01) {
-                        context.fillStyle = "white";
-                        context.fillRect((x * 16) % 256 + i * 2, y * 16 + (index % 8) * 2, 2, 2);
+            for (let i = 0; i < Math.floor(length / 16); i++) {
+                //スプライトの初期化
+                let sprite: number[][] = new Array(8);
+                for (let j = 0; j < 16; j++) {
+                    sprite[j] = new Array(8);
+                    for(let k = 0; k < 8; k++) {
+                        sprite[j][k] = 0;
                     }
                 }
-            })
+
+                //スプライトの描画
+                for (let j = 0; j < 8; j++) {
+                    let s1 = this._chrrom[i * 16 + j];
+                    let s2 = this._chrrom[i * 16 + j + 8];
+
+                    for (let k = 0; k < 8; k++) {
+                        sprite[j][k] += (s1 >> (7 - k)) & 0x01;
+                        sprite[j][k] += (s2 >> (7 - k)) & 0x01;
+                    }
+                }
+
+                for (let y = 0; y < 8; y++) {
+                    for (let x = 0; x < 8; x++) {
+                        context.fillStyle = 'rgb(' + sprite[y][x] * 64 + ',' + sprite[y][x] * 64 + ',' + sprite[y][x] * 64 + ')';
+                        context.fillRect(((i % 16) * 8 + x) * 2, (y + Math.floor(i / 16) * 8) * 2, 2, 2);
+                    }
+                }
+            }
         }
     }
 
