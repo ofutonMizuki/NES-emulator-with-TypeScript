@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8" />
     <title>NES Emulator</title>
     <style>
         /* General Styling */
         body {
-            font-family: sans-serif;
             background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
             margin: 0;
             min-height: 100vh;
-            /* body takes up full viewport */
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            border: 1px solid #666;
+            margin-bottom: 10px;
+            background-color: #eee;
         }
 
         .section {
@@ -36,7 +40,6 @@
             width: 100%;
             gap: 20px;
             flex-grow: 0;
-            /* Prevent expansion */
         }
 
         #screen-io-container {
@@ -49,26 +52,15 @@
         #main_section {
             display: flex;
             justify-content: center;
-        }
-
-        #screen {
-            image-rendering: pixelated;
-            border: 2px solid #333;
-            background-color: #000;
-        }
-
-        /* I/O Section */
-        #io_section {
-            display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        #controller {
-            image-rendering: pixelated;
-            border: 1px solid #666;
-            margin-bottom: 10px;
-            background-color: #eee;
+        /* I/O Section */
+        .section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         /* Button Styles */
@@ -131,22 +123,11 @@
             white-space: nowrap;
         }
 
-        /* Debug Section */
-        #debug_section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Debug Canvas Container - これが重要 */
         .debug-canvas-container {
             display: flex;
             flex-direction: column;
-            /* 垂直方向に配置 */
             align-items: center;
-            /* 中央揃え */
             margin-bottom: 10px;
-            /* 下に少し余白 */
         }
 
 
@@ -158,10 +139,8 @@
             height: auto;
         }
 
-        /* Debug Section Label */
-        .debug-canvas-container label {
+        label {
             margin-bottom: 5px;
-            /* ラベルとキャンバスの間隔を狭める */
             font-weight: bold;
         }
 
@@ -176,33 +155,26 @@
             box-sizing: border-box;
             font-family: monospace;
             border-top: 1px solid #555;
-            height: auto;
-            flex-shrink: 0;
-            /* flex-grow: 1;  削除 */
             max-height: 200px;
+            /* 初期値は設定しておく */
             overflow-y: auto;
+            flex-shrink: 0;
         }
-
 
         /* WebKit (Chrome, Safari, Edge) */
         #console-output::-webkit-scrollbar {
             width: 12px;
-            /* Scrollbar width */
         }
 
         #console-output::-webkit-scrollbar-track {
             background: #555;
-            /* Scrollbar background color */
             border-radius: 6px;
         }
 
         #console-output::-webkit-scrollbar-thumb {
             background-color: #888;
-            /* Scrollbar thumb color */
             border-radius: 6px;
-            /* Rounded corners for scrollbar thumb */
             border: 2px solid #555;
-            /* Border around thumb */
         }
 
         #console-output::-webkit-scrollbar-thumb:hover {
@@ -212,9 +184,7 @@
         /* Firefox */
         #console-output {
             scrollbar-width: thin;
-            /* Scrollbar width */
             scrollbar-color: #888 #555;
-            /* Scrollbar colors (thumb track) */
         }
     </style>
 </head>
@@ -223,9 +193,11 @@
     <div id="main-content">
         <div id="screen-io-container">
             <div id="main_section" class="section">
+                <label>Main</label>
                 <canvas id="screen" width="256" height="240"></canvas>
             </div>
             <div id="io_section" class="section">
+                <label>Controller</label>
                 <canvas id="controller" width="256" height="120"></canvas>
 
                 <div>
@@ -258,86 +230,110 @@
     <script src="bundle.js" defer></script>
 
     <script>
-        // Immediately Invoked Function Expression (IIFE)
         (function () {
             const consoleOutput = document.getElementById("console-output");
 
-            // Override console methods to redirect output
+            // コンソールのリダイレクト ( আগের উত্তর থেকে)
             redirectConsoleOutput();
 
             function redirectConsoleOutput() {
-                const originalConsoleLog = console.log;
-                const originalConsoleError = console.error;
-                const originalConsoleWarn = console.warn;
+              const originalConsoleLog = console.log;
+              const originalConsoleError = console.error;
+              const originalConsoleWarn = console.warn;
+              const buffer = [];
+              const flushInterval = 100;
+              let timer = null;
 
-                const buffer = [];
-                const flushInterval = 100;
-                let timer = null;
+              console.log = (...args) => {
+                originalConsoleLog.apply(console, args);
+                logWithBuffer(args, "log");
+              };
 
-                console.log = (...args) => {
-                    originalConsoleLog.apply(console, args);
-                    logWithBuffer(args, 'log');
-                };
+              console.error = (...args) => {
+                originalConsoleError.apply(console, args);
+                logWithBuffer(args, "error");
+              };
 
-                console.error = (...args) => {
-                    originalConsoleError.apply(console, args);
-                    logWithBuffer(args, 'error');
-                };
+              console.warn = (...args) => {
+                originalConsoleWarn.apply(console, args);
+                logWithBuffer(args, "warn");
+              };
 
-                console.warn = (...args) => {
-                    originalConsoleWarn.apply(console, args);
-                    logWithBuffer(args, 'warn');
-                };
-
-
-                function logWithBuffer(args, type = 'log') {
-                    const message = args.map(arg => {
-                        if (typeof arg === 'object' && arg !== null) {
-                            try {
-                                // Attempt to create a simplified string representation
-                                const simpleObj = {};
-                                for (const key in arg) {
-                                    if (arg.hasOwnProperty(key) && typeof arg[key] !== 'function' && typeof arg[key] !== 'object') {
-                                        simpleObj[key] = arg[key];
-                                    }
-                                }
-                                return JSON.stringify(simpleObj);
-
-                            } catch (error) {
-                                return `Error stringifying object: ${error.message}`;
-                            }
+              function logWithBuffer(args, type = "log") {
+                const message = args
+                  .map((arg) => {
+                    if (typeof arg === "object" && arg !== null) {
+                      try {
+                        const simpleObj = {};
+                        for (const key in arg) {
+                          if (
+                            arg.hasOwnProperty(key) &&
+                            typeof arg[key] !== "function" &&
+                            typeof arg[key] !== "object"
+                          ) {
+                            simpleObj[key] = arg[key];
+                          }
                         }
-                        return String(arg); // Convert to string
-                    }).join(' ');
-
-                    buffer.push({ message, type });
-
-                    if (!timer) {
-                        timer = setTimeout(() => {
-                            flushBuffer();
-                            timer = null;
-                        }, flushInterval);
+                        return JSON.stringify(simpleObj);
+                      } catch (error) {
+                        return `Error stringifying object: ${error.message}`;
+                      }
                     }
+                    return String(arg); // Convert to string
+                  })
+                  .join(" ");
+
+                buffer.push({ message, type });
+
+                if (!timer) {
+                  timer = setTimeout(() => {
+                    flushBuffer();
+                    timer = null;
+                  }, flushInterval);
                 }
+              }
 
-                function flushBuffer() {
-                    if (buffer.length === 0) return;
+              function flushBuffer() {
+                if (buffer.length === 0) return;
 
-                    const fragment = document.createDocumentFragment();
+                const fragment = document.createDocumentFragment();
 
-                    for (const item of buffer) {
-                        const outputLine = document.createElement("div");
-                        outputLine.textContent = item.message;
-                        outputLine.style.color = item.type === 'error' ? 'red' : item.type === 'warn' ? 'yellow' : 'white';
-                        fragment.appendChild(outputLine);
-                    }
-                    consoleOutput.appendChild(fragment);
-                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-                    buffer.length = 0; // Clear the buffer
+                for (const item of buffer) {
+                  const outputLine = document.createElement("div");
+                  outputLine.textContent = item.message;
+                  outputLine.style.color =
+                    item.type === "error"
+                      ? "red"
+                      : item.type === "warn"
+                      ? "yellow"
+                      : "white";
+                  fragment.appendChild(outputLine);
                 }
+                consoleOutput.appendChild(fragment);
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                buffer.length = 0; // Clear the buffer
+              }
             }
+
+            // 最大高さを設定する関数
+            function setConsoleMaxHeight() {
+                // 他の要素の高さを考慮 (例: ヘッダー、ボタンなど)
+                const otherElementsHeight =
+                    document.getElementById("main-content").offsetHeight;
+
+                // 利用可能な高さを計算 (ビューポートの高さ - 他の要素の高さ)
+                const availableHeight = window.innerHeight - otherElementsHeight; // 20px は余裕
+
+                // コンソール出力の最大高さを設定
+                consoleOutput.style.maxHeight = `${availableHeight}px`;
+            }
+
+
+            // 初期化時とウィンドウリサイズ時に最大高さを設定
+            setConsoleMaxHeight();
+            window.addEventListener("resize", setConsoleMaxHeight);
+
         })();
     </script>
 </body>
-
 </html>
