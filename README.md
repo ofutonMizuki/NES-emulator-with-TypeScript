@@ -3,7 +3,7 @@
 * 題名の通りTypeScriptでファミコンのエミュレータを開発する
 * ハードウェア寄りの知識を身に着ける
 * 保守性の高いコードを書くように心がける
-* htmlなど直接ロジックに関係ない部分は生成AIに任せる
+* htmlなど直接ロジックに関係ない部分は生成AIに任せる(Google Gemini)
 
 ## 参考サイト
 * [ファミコンエミュレータの創り方　- Hello, World!編 -](https://qiita.com/bokuweb/items/1575337bef44ae82f4d3)
