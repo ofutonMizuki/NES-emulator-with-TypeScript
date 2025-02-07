@@ -1,5 +1,6 @@
 import { CPU } from "./cpu";
 import { RAM } from "./ram";
+import { ROM } from "./rom";
 
 export class NES {
     private _masterClock: number = 236250000 / 11;
@@ -8,9 +9,11 @@ export class NES {
     private _cpu: CPU;
     private _wram: RAM;
     private _vram: RAM;
+    private _rom: ROM;
     constructor() {
         this._wram = new RAM();
         this._vram = new RAM();
         this._cpu = new CPU(this._wram);
+        this._rom = new ROM();
     }
 }
