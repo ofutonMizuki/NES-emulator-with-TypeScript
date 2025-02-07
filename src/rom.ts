@@ -42,7 +42,7 @@ export class ROM {
                 throw new Error("Could not get 2D context");
             }
             context.fillStyle = "black";
-            context.fillRect(0, 0, 256, 256);
+            context.fillRect(0, 0, 512, 256);
 
             for (let i = 0; i < Math.floor(length / 16); i++) {
                 //スプライトの初期化
@@ -68,7 +68,7 @@ export class ROM {
                 for (let y = 0; y < 8; y++) {
                     for (let x = 0; x < 8; x++) {
                         context.fillStyle = 'rgb(' + sprite[y][x] * 64 + ',' + sprite[y][x] * 64 + ',' + sprite[y][x] * 64 + ')';
-                        context.fillRect(((i % 16) * 8 + x) * 2, (y + Math.floor(i / 16) * 8) * 2, 2, 2);
+                        context.fillRect(((i % 64) * 8 + x), (y + Math.floor(i / 64) * 8), 1, 1);
                     }
                 }
             }
