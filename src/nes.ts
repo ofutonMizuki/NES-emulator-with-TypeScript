@@ -14,12 +14,16 @@ export class NES {
     constructor() {
         this._wram = new RAM();
         this._vram = new RAM();
-        this._cpu = new CPU(this._wram);
+        this._cpu = new CPU(this);
         this._rom = new ROM();
     }
 
     insertROM(romData: Uint8Array, debugCanvas: HTMLCanvasElement | undefined = undefined) {
         this._rom.load(romData, debugCanvas);
+    }
+
+    readWRAM(address: number) {
+        return this._wram.read(address);
     }
 
     start() {
