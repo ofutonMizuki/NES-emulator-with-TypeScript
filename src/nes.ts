@@ -18,8 +18,8 @@ export class NES {
         this._rom = new ROM();
     }
 
-    insertROM(romData: Uint8Array) {
-        this._rom.load(romData);
+    insertROM(romData: Uint8Array, debugCanvas: HTMLCanvasElement | undefined = undefined) {
+        this._rom.load(romData, debugCanvas);
     }
 
     start() {

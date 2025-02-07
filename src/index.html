@@ -5,57 +5,339 @@
     <meta charset="UTF-8" />
     <title>NES Emulator</title>
     <style>
+        /* General Styling */
         body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
+            min-height: 100vh;
+            /* body takes up full viewport */
         }
 
+        .section {
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        /* Main Content Area */
+        #main-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: 100%;
+            gap: 20px;
+            flex-grow: 0;
+            /* Prevent expansion */
+        }
+
+        #screen-io-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Main Section (Screen) */
         #main_section {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
         }
 
+        #screen {
+            image-rendering: pixelated;
+            border: 2px solid #333;
+            background-color: #000;
+        }
+
+        /* I/O Section */
         #io_section {
-            margin: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
 
-        input {
-            margin: 10px;
+        #controller {
+            image-rendering: pixelated;
+            border: 1px solid #666;
+            margin-bottom: 10px;
+            background-color: #eee;
+        }
+
+        /* Button Styles */
+        #io_section div {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
         }
 
         button {
-            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid #4CAF50;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #367c39;
+        }
+
+        /* ROM Selection */
+        #rom_section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        #rom-file {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+
+        #rom-file+label {
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background-color: #70a5d9;
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #rom-file+label:hover {
+            background-color: #558ac6;
+        }
+
+        #rom_section>label:first-of-type {
+            white-space: nowrap;
+        }
+
+        /* Debug Section */
+        #debug_section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Debug Canvas Container - これが重要 */
+        .debug-canvas-container {
+            display: flex;
+            flex-direction: column;
+            /* 垂直方向に配置 */
+            align-items: center;
+            /* 中央揃え */
+            margin-bottom: 10px;
+            /* 下に少し余白 */
+        }
+
+
+        #debug-canvas {
+            image-rendering: pixelated;
+            border: 1px solid #666;
+            background-color: #eee;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Debug Section Label */
+        .debug-canvas-container label {
+            margin-bottom: 5px;
+            /* ラベルとキャンバスの間隔を狭める */
+            font-weight: bold;
+        }
+
+
+        #console-output {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            box-sizing: border-box;
+            font-family: monospace;
+            border-top: 1px solid #555;
+            height: auto;
+            flex-shrink: 0;
+            /* flex-grow: 1;  削除 */
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+
+        /* WebKit (Chrome, Safari, Edge) */
+        #console-output::-webkit-scrollbar {
+            width: 12px;
+            /* Scrollbar width */
+        }
+
+        #console-output::-webkit-scrollbar-track {
+            background: #555;
+            /* Scrollbar background color */
+            border-radius: 6px;
+        }
+
+        #console-output::-webkit-scrollbar-thumb {
+            background-color: #888;
+            /* Scrollbar thumb color */
+            border-radius: 6px;
+            /* Rounded corners for scrollbar thumb */
+            border: 2px solid #555;
+            /* Border around thumb */
+        }
+
+        #console-output::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+
+        /* Firefox */
+        #console-output {
+            scrollbar-width: thin;
+            /* Scrollbar width */
+            scrollbar-color: #888 #555;
+            /* Scrollbar colors (thumb track) */
         }
     </style>
 </head>
 
 <body>
-    <div id="main_section">
-        <canvas id="screen" width="256" height="240"></canvas>
-    </div>
-    <div id="io_section">
-        <canvas id="controller" width="256" height="120"></canvas>
+    <div id="main-content">
+        <div id="screen-io-container">
+            <div id="main_section" class="section">
+                <canvas id="screen" width="256" height="240"></canvas>
+            </div>
+            <div id="io_section" class="section">
+                <canvas id="controller" width="256" height="120"></canvas>
 
-        <div>
-            <button id="start-button">Start</button>
-            <button id="reset-button">Reset</button>
+                <div>
+                    <button id="start-button">Start</button>
+                    <button id="reset-button">Reset</button>
+                </div>
+                <div id="rom_section">
+                    <label for="rom-file">ROM File</label>
+                    <input type="file" id="rom-file" accept=".nes" />
+                    <label for="rom-file">Choose File</label>
+                </div>
+            </div>
         </div>
-        <div id="rom_section">
-            <label>ROMファイル</label>
-            <input type="file" id="rom-file" accept=".nes" />
+
+        <div id="debug_section" class="section">
+            <div class="debug-canvas-container">
+                <label>Debug_CHRROM</label>
+                <canvas id="chrrom-canvas" width="256" height="256"></canvas>
+            </div>
+            <div class="debug-canvas-container">
+                <label>Debug_BG</label>
+                <canvas id="bg-canvas" width="512" height="480"></canvas>
+            </div>
         </div>
     </div>
-    <script src="bundle.js"></script>
+    <div id="console-output">
+        Console output will appear here.
+    </div>
+
+    <script src="bundle.js" defer></script>
+
+    <script>
+        // Immediately Invoked Function Expression (IIFE)
+        (function () {
+            const consoleOutput = document.getElementById("console-output");
+
+            // Override console methods to redirect output
+            redirectConsoleOutput();
+
+            function redirectConsoleOutput() {
+                const originalConsoleLog = console.log;
+                const originalConsoleError = console.error;
+                const originalConsoleWarn = console.warn;
+
+                const buffer = [];
+                const flushInterval = 100;
+                let timer = null;
+
+                console.log = (...args) => {
+                    originalConsoleLog.apply(console, args);
+                    logWithBuffer(args, 'log');
+                };
+
+                console.error = (...args) => {
+                    originalConsoleError.apply(console, args);
+                    logWithBuffer(args, 'error');
+                };
+
+                console.warn = (...args) => {
+                    originalConsoleWarn.apply(console, args);
+                    logWithBuffer(args, 'warn');
+                };
+
+
+                function logWithBuffer(args, type = 'log') {
+                    const message = args.map(arg => {
+                        if (typeof arg === 'object' && arg !== null) {
+                            try {
+                                // Attempt to create a simplified string representation
+                                const simpleObj = {};
+                                for (const key in arg) {
+                                    if (arg.hasOwnProperty(key) && typeof arg[key] !== 'function' && typeof arg[key] !== 'object') {
+                                        simpleObj[key] = arg[key];
+                                    }
+                                }
+                                return JSON.stringify(simpleObj);
+
+                            } catch (error) {
+                                return `Error stringifying object: ${error.message}`;
+                            }
+                        }
+                        return String(arg); // Convert to string
+                    }).join(' ');
+
+                    buffer.push({ message, type });
+
+                    if (!timer) {
+                        timer = setTimeout(() => {
+                            flushBuffer();
+                            timer = null;
+                        }, flushInterval);
+                    }
+                }
+
+                function flushBuffer() {
+                    if (buffer.length === 0) return;
+
+                    const fragment = document.createDocumentFragment();
+
+                    for (const item of buffer) {
+                        const outputLine = document.createElement("div");
+                        outputLine.textContent = item.message;
+                        outputLine.style.color = item.type === 'error' ? 'red' : item.type === 'warn' ? 'yellow' : 'white';
+                        fragment.appendChild(outputLine);
+                    }
+                    consoleOutput.appendChild(fragment);
+                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                    buffer.length = 0; // Clear the buffer
+                }
+            }
+        })();
+    </script>
 </body>
 
 </html>
