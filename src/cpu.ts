@@ -160,7 +160,7 @@ export class CPU {
             Z: false,
             C: false
         }
-        this._nes = new NES();
+        this._nes = nes;
     }
 
     private readMemory(address: number): number {
