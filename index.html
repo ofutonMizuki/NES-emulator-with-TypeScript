@@ -1,0 +1,285 @@
+<!doctype html><html><head><meta charset="UTF-8"/><title>NES Emulator</title><style>/* General Styling */
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            border: 1px solid #666;
+            margin-bottom: 10px;
+            background-color: #eee;
+        }
+
+        .section {
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        /* Main Content Area */
+        #main-content {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: 100%;
+            gap: 20px;
+            flex-grow: 0;
+        }
+
+        #screen-io-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Main Section (Screen) */
+        #main_section {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* I/O Section */
+        .section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Button Styles */
+        #io_section div {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid #4CAF50;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #367c39;
+        }
+
+        /* ROM Selection */
+        #rom_section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        #rom-file {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+
+        #rom-file+label {
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background-color: #70a5d9;
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #rom-file+label:hover {
+            background-color: #558ac6;
+        }
+
+        #rom_section>label:first-of-type {
+            white-space: nowrap;
+        }
+
+        .debug-canvas-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+
+        #debug-canvas {
+            image-rendering: pixelated;
+            border: 1px solid #666;
+            background-color: #eee;
+            max-width: 100%;
+            height: auto;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+
+        #console-output {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            box-sizing: border-box;
+            font-family: monospace;
+            border-top: 1px solid #555;
+            max-height: 200px;
+            /* 初期値は設定しておく */
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        /* WebKit (Chrome, Safari, Edge) */
+        #console-output::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #console-output::-webkit-scrollbar-track {
+            background: #555;
+            border-radius: 6px;
+        }
+
+        #console-output::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 6px;
+            border: 2px solid #555;
+        }
+
+        #console-output::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+
+        /* Firefox */
+        #console-output {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #555;
+        }</style><script defer="defer" src="bundle.js"></script></head><body><div id="main-content"><div id="screen-io-container"><div id="main_section" class="section"><label>Main</label><canvas id="screen" width="256" height="240"></canvas></div><div id="io_section" class="section"><label>Controller</label><canvas id="controller" width="256" height="120"></canvas><div><button id="start-button">Start</button> <button id="reset-button">Reset</button></div><div id="rom_section"><label for="rom-file">ROM File</label> <input type="file" id="rom-file" accept=".nes"/> <label for="rom-file">Choose File</label></div></div></div><div id="debug_section" class="section"><div class="debug-canvas-container"><label>Debug_CHRROM</label><canvas id="chrrom-canvas" width="256" height="256"></canvas></div><div class="debug-canvas-container"><label>Debug_BG</label><canvas id="bg-canvas" width="512" height="480"></canvas></div></div></div><div id="console-output">Console output will appear here.</div><script src="bundle.js" defer="defer"></script><script>(function () {
+            const consoleOutput = document.getElementById("console-output");
+
+            // コンソールのリダイレクト ( আগের উত্তর থেকে)
+            redirectConsoleOutput();
+
+            function redirectConsoleOutput() {
+              const originalConsoleLog = console.log;
+              const originalConsoleError = console.error;
+              const originalConsoleWarn = console.warn;
+              const buffer = [];
+              const flushInterval = 100;
+              let timer = null;
+
+              console.log = (...args) => {
+                originalConsoleLog.apply(console, args);
+                logWithBuffer(args, "log");
+              };
+
+              console.error = (...args) => {
+                originalConsoleError.apply(console, args);
+                logWithBuffer(args, "error");
+              };
+
+              console.warn = (...args) => {
+                originalConsoleWarn.apply(console, args);
+                logWithBuffer(args, "warn");
+              };
+
+              function logWithBuffer(args, type = "log") {
+                const message = args
+                  .map((arg) => {
+                    if (typeof arg === "object" && arg !== null) {
+                      try {
+                        const simpleObj = {};
+                        for (const key in arg) {
+                          if (
+                            arg.hasOwnProperty(key) &&
+                            typeof arg[key] !== "function" &&
+                            typeof arg[key] !== "object"
+                          ) {
+                            simpleObj[key] = arg[key];
+                          }
+                        }
+                        return JSON.stringify(simpleObj);
+                      } catch (error) {
+                        return `Error stringifying object: ${error.message}`;
+                      }
+                    }
+                    return String(arg); // Convert to string
+                  })
+                  .join(" ");
+
+                buffer.push({ message, type });
+
+                if (!timer) {
+                  timer = setTimeout(() => {
+                    flushBuffer();
+                    timer = null;
+                  }, flushInterval);
+                }
+              }
+
+              function flushBuffer() {
+                if (buffer.length === 0) return;
+
+                const fragment = document.createDocumentFragment();
+
+                for (const item of buffer) {
+                  const outputLine = document.createElement("div");
+                  outputLine.textContent = item.message;
+                  outputLine.style.color =
+                    item.type === "error"
+                      ? "red"
+                      : item.type === "warn"
+                      ? "yellow"
+                      : "white";
+                  fragment.appendChild(outputLine);
+                }
+                consoleOutput.appendChild(fragment);
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+                buffer.length = 0; // Clear the buffer
+              }
+            }
+
+            // 最大高さを設定する関数
+            function setConsoleMaxHeight() {
+                // 他の要素の高さを考慮 (例: ヘッダー、ボタンなど)
+                const otherElementsHeight =
+                    document.getElementById("main-content").offsetHeight;
+
+                // 利用可能な高さを計算 (ビューポートの高さ - 他の要素の高さ)
+                const availableHeight = window.innerHeight - otherElementsHeight; // 20px は余裕
+
+                // コンソール出力の最大高さを設定
+                consoleOutput.style.maxHeight = `${availableHeight}px`;
+            }
+
+
+            // 初期化時とウィンドウリサイズ時に最大高さを設定
+            setConsoleMaxHeight();
+            window.addEventListener("resize", setConsoleMaxHeight);
+
+        })();</script></body></html>
