@@ -10,10 +10,19 @@ export class NES {
     private _wram: RAM;
     private _vram: RAM;
     private _rom: ROM;
+
     constructor() {
         this._wram = new RAM();
         this._vram = new RAM();
         this._cpu = new CPU(this._wram);
         this._rom = new ROM();
+    }
+
+    insertROM(romData: Uint8Array) {
+        this._rom.load(romData);
+    }
+
+    start() {
+        console.log("NES started");
     }
 }

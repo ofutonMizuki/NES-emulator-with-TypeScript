@@ -1,4 +1,5 @@
 import { NES } from "./nes";
+const nes = new NES();
 
 function main() {
     console.log("Hello, NES Emulator!");
@@ -14,7 +15,6 @@ function main() {
     
         context.fillStyle = "black";
         context.fillRect(0, 0, 256, 240);
-        const nes = new NES();
     } catch (error) {
         alert("Error: " + (error as Error).stack);
     }
@@ -34,14 +34,20 @@ window.onload = () => {
             const arrayBuffer = await file.arrayBuffer();
             const romData = new Uint8Array(arrayBuffer);
 
-            // ここで romData を使ってエミュレータを初期化・実行する
-            console.log("ROM size:", romData.length);
-            console.log("ROM header:", romData.slice(0, 16));
+            // Insert the ROM into the NES
+            nes.insertROM(romData);
 
         } catch (error) {
             console.error("Error loading ROM:", error);
         }
     });
 
+    // Start the NES when the start button is clicked
+    const startButton = document.getElementById("start-button") as HTMLButtonElement;
+    startButton.addEventListener("click", () => {
+        nes.start();
+    });
+
+    
     main();
 };
