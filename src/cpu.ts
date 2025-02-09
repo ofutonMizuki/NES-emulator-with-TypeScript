@@ -173,7 +173,7 @@ export class CPU {
     /**
      * CPUの起動
      */
-    start(){
+    start() {
         this.initRegister();
         console.log("CPU started");
     }
@@ -184,21 +184,17 @@ export class CPU {
      * @returns 
      */
     private readMemory(address: number): number {
-        if (address < 0x0800) {
+        if (address < 0x2000) {
             //WRAM
-            return this._nes.readWRAM(address);
-        }
-        else if (address < 0x2000) {
-            //WRAM
-        }
-        else if (address < 0x2008) {
-            //PPUレジスタ
+            return this._nes.readWRAM(address & 0x0FFF);
         }
         else if (address < 0x4000) {
             //PPUレジスタ
+            //address & 0x0F;
         }
         else if (address < 0x4020) {
             //APU, PAD
+            //address & 0x1F;
         }
         else if (address < 0x6000) {
             //拡張ROM
@@ -208,7 +204,7 @@ export class CPU {
         }
         else if (address < 0x10000) {
             //ROM
-            return this._nes.readPRGROM(address - 0x8000);
+            return this._nes.readPRGROM(address & 0x7FFF);
         }
         else {
             throw new Error("Memory is out of range");

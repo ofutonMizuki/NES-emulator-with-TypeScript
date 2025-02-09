@@ -1,6 +1,7 @@
 export class ROM {
     private _chrrom: Uint8Array;
     private _prgrom: Uint8Array;
+    private _prgromSize: number;
 
     /**
      * コンストラクタ
@@ -9,6 +10,7 @@ export class ROM {
     constructor(romData: Uint8Array | undefined = undefined) {
         this._chrrom = new Uint8Array();
         this._prgrom = new Uint8Array();
+        this._prgromSize = 0;
 
         if (romData) {
             this.load(romData);
@@ -26,6 +28,7 @@ export class ROM {
         console.log("ROM header:", romHeader);
 
         //ヘッダの読み取りとサイズの計算
+        this._prgromSize = romHeader[4];
         let chRomPages = romHeader[5];
         let chRomStart = 0x0010 + romHeader[4] * 0x4000;
         let chRomEnd = chRomStart + chRomPages * 0x2000;
@@ -82,7 +85,7 @@ export class ROM {
      * @returns 
      */
     readPrgrom(address: number): number {
-        return this._prgrom[address];
+        return this._prgromSize == 1 ? this._prgrom[address] & 0x3FFF : this._prgrom[address];
     }
 
     /**
