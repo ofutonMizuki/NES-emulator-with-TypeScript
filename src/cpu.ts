@@ -142,9 +142,14 @@ export class CPU {
     private _register: CPURegister;
     private _nes: NES; //メインメモリ
     constructor(nes: NES) {
+        this._nes = nes;
+        this._register = new CPURegister();
+        this.initRegister();
+    }
+
+    initRegister() {
         //レジスタの初期化
         //起動時は固定値
-        this._register = new CPURegister();
         this._register.accumulator = 0;
         this._register.indexRegisterX = 0;
         this._register.indexRegisterY = 0;
@@ -159,14 +164,20 @@ export class CPU {
             I: true,
             Z: false,
             C: false
-        }
-        this._nes = nes;
+        };
+        console.log("programCounter:", this._register.programCounter.toString(16));
+        console.log("Register initialized");
+    }
+
+    start(){
+        this.initRegister();
+        console.log("CPU started");
     }
 
     private readMemory(address: number): number {
         if (address < 0x0800) {
             //WRAM
-            this._nes.readWRAM(address);
+            return this._nes.readWRAM(address);
         }
         else if (address < 0x2000) {
             //WRAM
@@ -186,13 +197,11 @@ export class CPU {
         else if (address < 0x8000) {
             //拡張RAM
         }
-        else if (address < 0xC000) {
-            //ROM
-        }
         else if (address < 0x10000) {
             //ROM
+            return this._nes.readPRGROM(address - 0x8000);
         }
-        else{
+        else {
             throw new Error("Memory is out of range");
         }
 

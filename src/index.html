@@ -248,6 +248,10 @@
                 originalConsoleLog.apply(console, args);
                 logWithBuffer(args, "log");
               };
+              console.dir = (...args) => {
+                originalConsoleLog.apply(console, args);
+                logWithBuffer(args, "dir");
+              };
 
               console.error = (...args) => {
                 originalConsoleError.apply(console, args);

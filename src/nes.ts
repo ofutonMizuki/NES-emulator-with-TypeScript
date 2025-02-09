@@ -14,8 +14,8 @@ export class NES {
     constructor() {
         this._wram = new RAM();
         this._vram = new RAM();
-        this._cpu = new CPU(this);
         this._rom = new ROM();
+        this._cpu = new CPU(this);
     }
 
     insertROM(romData: Uint8Array, debugCanvas: HTMLCanvasElement | undefined = undefined) {
@@ -26,7 +26,13 @@ export class NES {
         return this._wram.read(address);
     }
 
+    //アドレスはROM基準
+    readPRGROM(address: number) {
+        return this._rom.readPrgrom(address);
+    }
+
     start() {
         console.log("NES started");
+        this._cpu.start();
     }
 }

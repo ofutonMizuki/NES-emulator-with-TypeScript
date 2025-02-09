@@ -32,6 +32,7 @@ export class ROM {
 
         //PRG-ROMとCHR-ROMの分割
         this._prgrom = romData.slice(0x0010, chRomStart);
+        console.dir("PRG-ROM", this._prgrom);
         this._chrrom = romData.slice(chRomStart, chRomEnd);
 
         if (debugCanvas) {
@@ -90,7 +91,7 @@ export class ROM {
      * @param debugCanvas
      * @returns 
      */
-    readchrrom(address: number): number {
+    readChrrom(address: number): number {
         return this._chrrom[address];
     }
 }
