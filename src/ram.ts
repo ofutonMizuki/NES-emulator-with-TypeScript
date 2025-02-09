@@ -9,6 +9,11 @@ export class RAM {
         this._ram = new Array(0x0800);
     }
 
+    /**
+     * メモリの読み取り
+     * @param address 
+     * @returns 
+     */
     read(address: number) {
         if (address < 0) {
             throw new Error("Memory is out of range");
@@ -21,6 +26,11 @@ export class RAM {
         return this._ram[address] & 0xFF;
     }
 
+    /**
+     * メモリの書き込み
+     * @param address 
+     * @param value 
+     */
     write(address: number, value: number) {
         if (address < 0) {
             throw new Error("Memory is out of range");

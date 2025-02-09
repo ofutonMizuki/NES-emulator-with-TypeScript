@@ -1,6 +1,9 @@
 import { NES } from "./nes";
 const nes = new NES();
 
+/**
+ * メイン関数
+ */
 function main() {
     console.log("Hello, NES Emulator!");
     //alert("Hello, NES Emulator!");
@@ -24,6 +27,9 @@ window.onload = () => {
     const romFileInput = document.getElementById("rom-file") as HTMLInputElement;
     const debugCanvas = document.getElementById("chrrom-canvas") as HTMLCanvasElement;
 
+    /**
+     * ROMファイルが選択されたときの処理
+     */
     romFileInput.addEventListener("change", async (event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
 
@@ -43,7 +49,7 @@ window.onload = () => {
         }
     });
 
-    // Start the NES when the start button is clicked
+    // Start button
     const startButton = document.getElementById("start-button") as HTMLButtonElement;
     startButton.addEventListener("click", () => {
         nes.start();

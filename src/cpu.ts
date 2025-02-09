@@ -141,6 +141,7 @@ class CPURegister {
 export class CPU {
     private _register: CPURegister;
     private _nes: NES; //メインメモリ
+
     constructor(nes: NES) {
         this._nes = nes;
         this._register = new CPURegister();
@@ -169,11 +170,19 @@ export class CPU {
         console.log("Register initialized");
     }
 
+    /**
+     * CPUの起動
+     */
     start(){
         this.initRegister();
         console.log("CPU started");
     }
 
+    /**
+     * メモリの読み取り
+     * @param address 
+     * @returns 
+     */
     private readMemory(address: number): number {
         if (address < 0x0800) {
             //WRAM

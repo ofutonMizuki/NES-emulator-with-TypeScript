@@ -18,19 +18,36 @@ export class NES {
         this._cpu = new CPU(this);
     }
 
+    /**
+     * ROMの挿入
+     * @param romData 
+     * @param debugCanvas
+     */
     insertROM(romData: Uint8Array, debugCanvas: HTMLCanvasElement | undefined = undefined) {
         this._rom.load(romData, debugCanvas);
     }
 
+    /**
+     * WRAMの読み込み
+     * @param address 
+     * @returns 
+     */
     readWRAM(address: number) {
         return this._wram.read(address);
     }
 
-    //アドレスはROM基準
+    /**
+     * PRG-ROMの読み込み(アドレスは0x00スタート)
+     * @param address 
+     * @returns 
+     */
     readPRGROM(address: number) {
         return this._rom.readPrgrom(address);
     }
 
+    /**
+     * NESの起動
+     */
     start() {
         console.log("NES started");
         this._cpu.start();
