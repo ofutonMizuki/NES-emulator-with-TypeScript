@@ -22,7 +22,12 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
+      filename: 'index.html',
       template: './src/index.html', // テンプレートとなる HTML ファイル
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'deAssemble.html',
+      template: './src/deAssemble.html', // テンプレートとなる HTML ファイル
     }),
   ],
   devServer: {
