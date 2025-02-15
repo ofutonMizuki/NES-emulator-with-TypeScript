@@ -239,12 +239,13 @@ export class CPU {
      */
     private executeInstruction() {
         let opcode = this.readMemory(this._register.programCounter);
-        console.log("opcode:", opcode.toString(16));
+        console.log(`address: 0x${this.addressToString(this._register.programCounter)}, opcode: 0x${opcode.toString(16).padStart(2, '0').toUpperCase()}`);
+        this._register.programCounter++;
 
         //jmp
         if (opcode == 0x4C || opcode == 0x6C) {
             let addressingMode: AddressingMode = opcode == 0x4C ? "Absolute" : "Indirect";
-            this.jmp(addressingMode);
+            return execute ? this.jmp(addressingMode) : `JMP ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
         }
         //0b10000000 (Store)
         else if ((opcode & 0x80) == 0x80) {
@@ -252,14 +253,17 @@ export class CPU {
             //STA
             if ((opcode & 0x01) == 0x01) {
                 addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `STA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
             //STX
             else if ((opcode & 0x02) == 0x02) {
                 addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `STX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
             //STY
             else if ((opcode & 0x00) == 0x00) {
                 addressingMode = this.getAddressingMode(opcode, "Y");
+                return execute ? undefined : `STY ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
         }
         //0b10100000 (Load)
@@ -268,52 +272,74 @@ export class CPU {
             //LDA
             if ((opcode & 0x01) == 0x01) {
                 addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `LDA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
             //LDX
             else if ((opcode & 0x02) == 0x02) {
                 addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `LDX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
             //LDY
             else if ((opcode & 0x00) == 0x00) {
                 addressingMode = this.getAddressingMode(opcode, "Y");
+                return execute ? undefined : `LDY ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
         }
+
+        throw new Error("Unknown opcode");
     }
 
-    private getAddress(addressingMode: AddressingMode): Address {
+    /**
+     * PCの値は第一オペランドのアドレスを指すこと
+     * 終了時は次の命令のアドレスを指す
+     * @param addressingMode 
+     * @returns 
+     */
+    private getAddress(addressingMode: AddressingMode) {
         let tempAddress: number = 0;
+        let address: Address | undefined = undefined;
         switch (addressingMode) {
             case "Implied":
-                return 0;
+                break;
             case "Accumulator":
-                return 0;
+                break;
             case "Immediate":
-                return 0;
+                break;
             case "ZeroPage":
-                return this.readMemory(this._register.programCounter);
+                address = this.readMemory(this._register.programCounter);
+                break;
             case "ZeroPageX":
-                return this.readMemory(this._register.programCounter) + this._register.indexRegisterX;
+                address = this.readMemory(this._register.programCounter) + this._register.indexRegisterX;
+                break;
             case "ZeroPageY":
-                return this.readMemory(this._register.programCounter) + this._register.indexRegisterY;
+                address = this.readMemory(this._register.programCounter) + this._register.indexRegisterY;
+                break;
             case "Relative":
-                return 0;
+                address = 0;
             case "Absolute":
-                return this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
+                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
+                break;
             case "AbsoluteX":
-                return this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterX;
+                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterX;
+                break;
             case "AbsoluteY":
-                return this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterY;
+                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterY;
+                break;
             case "Indirect":
                 //間接参照
                 tempAddress = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
-                return this.readMemory(tempAddress) | (this.readMemory(tempAddress + 1) << 8);
+                address = this.readMemory(tempAddress) | (this.readMemory(tempAddress + 1) << 8);
+                break;
             case "IndirectX":
-                return 0;
+                break;
             case "IndirectY":
-                return 0;
+                break;
             default:
                 throw new Error("Unknown addressing mode");
         }
+
+        this._register.programCounter++;
+        return address;
     }
 
 
@@ -411,6 +437,10 @@ export class CPU {
      * @param addressingMode 
      */
     private jmp(addressingMode: AddressingMode) {
-        this._register.programCounter = this.getAddress(addressingMode);
+        let address = this.getAddress(addressingMode);
+        if (address == undefined) {
+            throw new Error("Address is undefined");
+        }
+        this._register.programCounter = address;
     }
 }

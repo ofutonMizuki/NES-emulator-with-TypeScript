@@ -52,4 +52,12 @@ export class NES {
         console.log("NES started");
         this._cpu.start();
     }
+
+    initDeAssemble() {
+        this._cpu.setPCto0x8000();
+    }
+
+    deAssemble() {
+        return this._cpu.execute(false);
+    }
 }
