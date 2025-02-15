@@ -23,13 +23,25 @@ type statusRegisterBits = {
     C: boolean
 }
 
+/**
+ * アドレッシングモード
+ */
+type AddressingMode = "Implied" | "Accumulator" | "Immediate" | "ZeroPage" | "ZeroPageX" | "ZeroPageY" | "Relative" | "Absolute" | "AbsoluteX" | "AbsoluteY" | "Indirect" | "IndirectX" | "IndirectY";
+
+/**
+ * アドレッシングタイプ
+ */
+type AddressingType = "A" | "X" | "Y";
+
+type Address = number;
+
 class CPURegister {
     private _accumulator: number; //アキュムレータ(8bit)
     private _indexRegisterX: number; //インデックスレジスタ(8bit)
     private _indexRegisterY: number; //インデックスレジスタ(8bit)
     private _stackPointer: number; //スタックポインタ(8bit)
     private _statusRegister: number; //ステータスレジスタ(8bit)
-    private _programCounter: number; //プログラムカウンタ(16bit)
+    private _programCounter: Address; //プログラムカウンタ(16bit)
     constructor() {
         this._accumulator = 0;
         this._indexRegisterX = 0;
@@ -183,7 +195,7 @@ export class CPU {
      * @param address 
      * @returns 
      */
-    private readMemory(address: number): number {
+    private readMemory(address: Address): number {
         if (address < 0x2000) {
             //WRAM
             return this._nes.readWRAM(address & 0x0FFF);
@@ -211,5 +223,194 @@ export class CPU {
         }
 
         return 0;
+    }
+
+    /**
+     * メモリの書き込み
+     * @param address 
+     * @param value 
+     */
+    private writeMemory(address: Address, value: number) {
+
+    }
+
+    /**
+     * 命令の実行
+     */
+    private executeInstruction() {
+        let opcode = this.readMemory(this._register.programCounter);
+        console.log("opcode:", opcode.toString(16));
+
+        //jmp
+        if (opcode == 0x4C || opcode == 0x6C) {
+            let addressingMode: AddressingMode = opcode == 0x4C ? "Absolute" : "Indirect";
+            this.jmp(addressingMode);
+        }
+        //0b10000000 (Store)
+        else if ((opcode & 0x80) == 0x80) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //STA
+            if ((opcode & 0x01) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+            }
+            //STX
+            else if ((opcode & 0x02) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+            }
+            //STY
+            else if ((opcode & 0x00) == 0x00) {
+                addressingMode = this.getAddressingMode(opcode, "Y");
+            }
+        }
+        //0b10100000 (Load)
+        else if ((opcode & 0xA0) == 0xA0) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //LDA
+            if ((opcode & 0x01) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+            }
+            //LDX
+            else if ((opcode & 0x02) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+            }
+            //LDY
+            else if ((opcode & 0x00) == 0x00) {
+                addressingMode = this.getAddressingMode(opcode, "Y");
+            }
+        }
+    }
+
+    private getAddress(addressingMode: AddressingMode): Address {
+        let tempAddress: number = 0;
+        switch (addressingMode) {
+            case "Implied":
+                return 0;
+            case "Accumulator":
+                return 0;
+            case "Immediate":
+                return 0;
+            case "ZeroPage":
+                return this.readMemory(this._register.programCounter);
+            case "ZeroPageX":
+                return this.readMemory(this._register.programCounter) + this._register.indexRegisterX;
+            case "ZeroPageY":
+                return this.readMemory(this._register.programCounter) + this._register.indexRegisterY;
+            case "Relative":
+                return 0;
+            case "Absolute":
+                return this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
+            case "AbsoluteX":
+                return this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterX;
+            case "AbsoluteY":
+                return this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterY;
+            case "Indirect":
+                //間接参照
+                tempAddress = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
+                return this.readMemory(tempAddress) | (this.readMemory(tempAddress + 1) << 8);
+            case "IndirectX":
+                return 0;
+            case "IndirectY":
+                return 0;
+            default:
+                throw new Error("Unknown addressing mode");
+        }
+    }
+
+
+    private getAddressingMode(opcode: number, type: AddressingType): AddressingMode {
+        opcode = opcode & 0x1F;
+        opcode = opcode >> 2;
+        console.log("opcode:", opcode.toString(16));
+
+        //Typeによってアドレッシングモードを変更
+        if (type == "A") {
+            if (opcode == 0x00) {
+                return "IndirectX";
+            }
+            else if (opcode == 0x01) {
+                return "ZeroPage";
+            }
+            else if (opcode == 0x02) {
+                return "Immediate";
+            }
+            else if (opcode == 0x03) {
+                return "Absolute";
+            }
+            else if (opcode == 0x04) {
+                return "IndirectY";
+            }
+            else if (opcode == 0x05) {
+                return "ZeroPageX";
+            }
+            else if (opcode == 0x06) {
+                return "AbsoluteY";
+            }
+            else if (opcode == 0x07) {
+                return "AbsoluteX";
+            }
+        }
+        if (type == "X") {
+            if (opcode == 0x00) {
+                return "Immediate";
+            }
+            else if (opcode == 0x01) {
+                return "ZeroPage";
+            }
+            else if (opcode == 0x02) {
+
+            }
+            else if (opcode == 0x03) {
+                return "Absolute";
+            }
+            else if (opcode == 0x04) {
+
+            }
+            else if (opcode == 0x05) {
+                return "ZeroPageY";
+            }
+            else if (opcode == 0x06) {
+
+            }
+            else if (opcode == 0x07) {
+                return "AbsoluteY";
+            }
+        }
+        if (type == "Y") {
+            if (opcode == 0x00) {
+                return "Immediate";
+            }
+            else if (opcode == 0x01) {
+                return "ZeroPage";
+            }
+            else if (opcode == 0x02) {
+
+            }
+            else if (opcode == 0x03) {
+                return "Absolute";
+            }
+            else if (opcode == 0x04) {
+
+            }
+            else if (opcode == 0x05) {
+                return "ZeroPageX";
+            }
+            else if (opcode == 0x06) {
+
+            }
+            else if (opcode == 0x07) {
+                return "AbsoluteX";
+            }
+        }
+
+        throw new Error("Unknown addressing mode");
+
+    }
+
+    /**
+     * ジャンプ
+     * @param addressingMode 
+     */
+    private jmp(addressingMode: AddressingMode) {
+        this._register.programCounter = this.getAddress(addressingMode);
     }
 }

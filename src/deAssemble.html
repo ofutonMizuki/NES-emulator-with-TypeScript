@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NES ROM Disassembler</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <input type="file" id="nesFile" accept=".nes">
+    <br>
+    <button onclick="disassemble()">Disassemble</button>
+    <br>
+    <textarea id="assemblyCode" rows="20" cols="80" readonly placeholder="アセンブリコードがここに表示されます"></textarea>
+    <script src="bundle.js" defer></script>
+</body>
+</html>
