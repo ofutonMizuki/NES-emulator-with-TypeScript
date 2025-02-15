@@ -235,9 +235,22 @@ export class CPU {
     }
 
     /**
-     * 命令の実行
+     * 逆アセンブル用
+     * プログラムカウンタを0x8000に設定
+     * 
      */
-    private executeInstruction() {
+    setPCto0x8000() {
+        this._register.programCounter = 0x8000;
+    }
+
+    private addressToString(address: Address | undefined) {
+        return address?.toString(16).padStart(4, '0').toUpperCase()
+    }
+
+    /**
+     * 命令の実行(毎クロック実行)
+     */
+    execute(execute: boolean = true) {
         let opcode = this.readMemory(this._register.programCounter);
         console.log(`address: 0x${this.addressToString(this._register.programCounter)}, opcode: 0x${opcode.toString(16).padStart(2, '0').toUpperCase()}`);
         this._register.programCounter++;
