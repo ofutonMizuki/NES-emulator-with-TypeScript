@@ -20,11 +20,17 @@ window.onload = () => {
 
             // Insert the ROM into the NES
             nes.insertROM(romData);
+
+            //プログラムカウンタの初期化
             nes.initDeAssemble();
 
-            let log = nes.deAssemble();
-
-            console.log(log);
+            try {
+                while(true){
+                    console.log(nes.deAssemble());
+                }
+            } catch (error) {
+                console.error("Error deAssemble:", error);   
+            }
         } catch (error) {
             console.error("Error loading ROM:", error);
         }

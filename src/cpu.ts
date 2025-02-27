@@ -260,6 +260,47 @@ export class CPU {
             let addressingMode: AddressingMode = opcode == 0x4C ? "Absolute" : "Indirect";
             return execute ? this.jmp(addressingMode) : `JMP ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
         }
+        //RTS
+        else if (opcode == 0x60) {
+            return execute ? undefined : `RTS`;
+        }
+        //SEI
+        else if (opcode == 0x78) {
+            return execute ? undefined : `SEI`;
+        }
+        //TAX
+        else if (opcode == 0xAA) {
+            return execute ? undefined : `TAX`;
+        }
+        //TAY
+        else if (opcode == 0xA8) {
+            return execute ? undefined : `TAY`;
+        }
+        //TSX
+        else if (opcode == 0xBA) {
+            return execute ? undefined : `TSX`;
+        }
+        //TXA
+        else if (opcode == 0xBA) {
+            return execute ? undefined : `TXA`;
+        }
+        //TXS
+        else if (opcode == 0x9A) {
+            return execute ? undefined : `TXS`;
+        }
+        //TYA
+        else if (opcode == 0x98) {
+            return execute ? undefined : `TYA`;
+        }
+        //CLD
+        else if (opcode == 0xD8) {
+            return execute ? undefined : `CLD`;
+        }
+        //B__
+        else if ((opcode & 0x0F) == 0x00) {
+            let addressingMode: AddressingMode = "Relative";
+            return execute ? undefined : `B__ ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+        }
         //0b10000000 (Store)
         else if ((opcode & 0x80) == 0x80) {
             let addressingMode: AddressingMode | undefined = undefined;
@@ -359,7 +400,7 @@ export class CPU {
     private getAddressingMode(opcode: number, type: AddressingType): AddressingMode {
         opcode = opcode & 0x1F;
         opcode = opcode >> 2;
-        console.log("opcode:", opcode.toString(16));
+        //console.log("opcode:", opcode.toString(16));
 
         //Typeによってアドレッシングモードを変更
         if (type == "A") {
