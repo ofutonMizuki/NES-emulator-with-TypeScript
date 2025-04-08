@@ -26,7 +26,7 @@ type statusRegisterBits = {
 /**
  * アドレッシングモード
  */
-type AddressingMode = "Implied" | "Accumulator" | "Immediate" | "ZeroPage" | "ZeroPageX" | "ZeroPageY" | "Relative" | "Absolute" | "AbsoluteX" | "AbsoluteY" | "Indirect" | "IndirectX" | "IndirectY";
+type AddressingMode = "Implied" | "Accumulator" | "Immediate" | "ZeroPage" | "ZeroPageX" | "ZeroPageY" | "Relative" | "Absolute" | "AbsoluteX" | "AbsoluteY" | "Indirect" | "IndirectX" | "IndirectY" | "Unknown";
 
 /**
  * アドレッシングタイプ
@@ -219,7 +219,7 @@ export class CPU {
             return this._nes.readPRGROM(address & 0x7FFF);
         }
         else {
-            throw new Error("Memory is out of range");
+            throw new Error(`Memory is out of range. Address: ${this.addressToString(address)}`);
         }
 
         return 0;
@@ -244,7 +244,10 @@ export class CPU {
     }
 
     private addressToString(address: Address | undefined) {
-        return address?.toString(16).padStart(4, '0').toUpperCase()
+        if (address == undefined) {
+            return "";
+        }
+        return address.toString(16).padStart(4, '0').toUpperCase();
     }
 
     /**
@@ -252,95 +255,241 @@ export class CPU {
      */
     execute(execute: boolean = true) {
         let opcode = this.readMemory(this._register.programCounter);
-        console.log(`address: 0x${this.addressToString(this._register.programCounter)}, opcode: 0x${opcode.toString(16).padStart(2, '0').toUpperCase()}`);
+        let pcText = `opcode: ${opcode.toString(16).padStart(2, '0').toUpperCase()}, address: 0x${this.addressToString(this._register.programCounter)}`;
         this._register.programCounter++;
+        console.log(opcode.toString(16).padStart(4, '0').toUpperCase());
 
         //jmp
         if (opcode == 0x4C || opcode == 0x6C) {
             let addressingMode: AddressingMode = opcode == 0x4C ? "Absolute" : "Indirect";
-            return execute ? this.jmp(addressingMode) : `JMP ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            return execute ? this.jmp(addressingMode) : `${pcText}, JMP ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+        }
+        else if (opcode == 0x20) {
+            let addressingMode: AddressingMode = "Absolute";
+            return execute ? undefined : `${pcText}, JSR ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+        }
+        //PHP
+        else if (opcode == 0x08) {
+            return execute ? undefined : `${pcText}, PHP`;
+        }
+        //PHA
+        else if (opcode == 0x48) {
+            return execute ? undefined : `${pcText}, PHA`;
+        }
+        //PLA
+        else if (opcode == 0x68) {
+            return execute ? undefined : `${pcText}, PLA`;
+        }
+        //PLP
+        else if (opcode == 0x28) {
+            return execute ? undefined : `${pcText}, PLP`;
         }
         //RTS
         else if (opcode == 0x60) {
-            return execute ? undefined : `RTS`;
+            return execute ? undefined : `${pcText}, RTS`;
         }
         //SEI
         else if (opcode == 0x78) {
-            return execute ? undefined : `SEI`;
+            return execute ? undefined : `${pcText}, SEI`;
         }
         //TAX
         else if (opcode == 0xAA) {
-            return execute ? undefined : `TAX`;
+            return execute ? undefined : `${pcText}, TAX`;
         }
         //TAY
         else if (opcode == 0xA8) {
-            return execute ? undefined : `TAY`;
+            return execute ? undefined : `${pcText}, TAY`;
         }
         //TSX
         else if (opcode == 0xBA) {
-            return execute ? undefined : `TSX`;
+            return execute ? undefined : `${pcText}, TSX`;
         }
         //TXA
         else if (opcode == 0xBA) {
-            return execute ? undefined : `TXA`;
+            return execute ? undefined : `${pcText}, TXA`;
         }
         //TXS
         else if (opcode == 0x9A) {
-            return execute ? undefined : `TXS`;
+            return execute ? undefined : `${pcText}, TXS`;
         }
         //TYA
         else if (opcode == 0x98) {
-            return execute ? undefined : `TYA`;
+            return execute ? undefined : `${pcText}, TYA`;
+        }
+        //CLC
+        else if (opcode == 0x18) {
+            return execute ? undefined : `${pcText}, CLC`;
         }
         //CLD
         else if (opcode == 0xD8) {
-            return execute ? undefined : `CLD`;
+            return execute ? undefined : `${pcText}, CLD`;
         }
+        //CLI
+        else if (opcode == 0x58) {
+            return execute ? undefined : `${pcText}, CLI`;
+        }
+        //CLV
+        else if (opcode == 0xD8) {
+            return execute ? undefined : `${pcText}, CLV`;
+        }
+        //SEC
+        else if (opcode == 0x38) {
+            return execute ? undefined : `${pcText}, SEC`;
+        }
+        //SED
+        else if (opcode == 0xF8) {
+            return execute ? undefined : `${pcText}, SED`;
+        }
+        //SEI
+        else if (opcode == 0x78) {
+            return execute ? undefined : `${pcText}, SEI`;
+        }
+        //DEX
+        else if (opcode == 0xCA) {
+            return execute ? undefined : `${pcText}, DEX`;
+        }
+        //DEY
+        else if (opcode == 0x88) {
+            return execute ? undefined : `${pcText}, DEY`;
+        }
+        //INX
+        else if (opcode == 0xE8) {
+            return execute ? undefined : `${pcText}, INX`;
+        }
+        //INY
+        else if (opcode == 0xC8) {
+            return execute ? undefined : `${pcText}, INY`;
+        }
+        //NOP
+        else if (opcode == 0xEA) {
+            return execute ? undefined : `${pcText}, NOP`;
+        }
+
         //B__
         else if ((opcode & 0x0F) == 0x00) {
             let addressingMode: AddressingMode = "Relative";
-            return execute ? undefined : `B__ ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            return execute ? undefined : `${pcText}, B__ ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
         }
-        //0b10000000 (Store)
-        else if ((opcode & 0x80) == 0x80) {
+        //
+        else if ((opcode & 0xE0) == 0xE0) {
             let addressingMode: AddressingMode | undefined = undefined;
-            //STA
-            if ((opcode & 0x01) == 0x01) {
-                addressingMode = this.getAddressingMode(opcode, "A");
-                return execute ? undefined : `STA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
-            }
-            //STX
-            else if ((opcode & 0x02) == 0x02) {
-                addressingMode = this.getAddressingMode(opcode, "X");
-                return execute ? undefined : `STX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
-            }
-            //STY
-            else if ((opcode & 0x00) == 0x00) {
+            //CPX
+            if ((opcode & 0x03) == 0x00) {
                 addressingMode = this.getAddressingMode(opcode, "Y");
-                return execute ? undefined : `STY ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+                return execute ? undefined : `${pcText}, CPX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //SBC
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, SBC ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //INC
+            if ((opcode & 0x03) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `${pcText}, INC ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+        }
+        //
+        else if ((opcode & 0xE0) == 0xC0) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //CMP
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, CMP ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
         }
         //0b10100000 (Load)
-        else if ((opcode & 0xA0) == 0xA0) {
+        else if ((opcode & 0xE0) == 0xA0) {
             let addressingMode: AddressingMode | undefined = undefined;
             //LDA
-            if ((opcode & 0x01) == 0x01) {
+            if ((opcode & 0x03) == 0x01) {
                 addressingMode = this.getAddressingMode(opcode, "A");
-                return execute ? undefined : `LDA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+                return execute ? undefined : `${pcText}, LDA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
             //LDX
-            else if ((opcode & 0x02) == 0x02) {
+            else if ((opcode & 0x03) == 0x02) {
                 addressingMode = this.getAddressingMode(opcode, "X");
-                return execute ? undefined : `LDX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+                return execute ? undefined : `${pcText}, LDX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
             //LDY
-            else if ((opcode & 0x00) == 0x00) {
+            else if ((opcode & 0x03) == 0x00) {
                 addressingMode = this.getAddressingMode(opcode, "Y");
-                return execute ? undefined : `LDY ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+                return execute ? undefined : `${pcText}, LDY ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+        }
+        //0b10000000 (Store)
+        else if ((opcode & 0xE0) == 0x80) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //STA
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, STA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //STX
+            else if ((opcode & 0x03) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `${pcText}, STX ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //STY
+            else if ((opcode & 0x03) == 0x00) {
+                addressingMode = this.getAddressingMode(opcode, "Y");
+                return execute ? undefined : `${pcText}, STY ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+        }
+        //
+        else if ((opcode & 0xE0) == 0x60) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //ADC
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, ADC ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+        }
+        //
+        else if ((opcode & 0xE0) == 0x40) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //EOR
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, EOR ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //LSR
+            if ((opcode & 0x03) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `${pcText}, LSR ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+        }
+        //
+        else if ((opcode & 0xE0) == 0x20) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //AND
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, AND ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //ROL
+            if ((opcode & 0x03) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `${pcText}, ROL ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+        }
+        //0b00000000 (Load)
+        else if ((opcode & 0xE0) == 0x00) {
+            let addressingMode: AddressingMode | undefined = undefined;
+            //ORA
+            if ((opcode & 0x03) == 0x01) {
+                addressingMode = this.getAddressingMode(opcode, "A");
+                return execute ? undefined : `${pcText}, ORA ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
+            }
+            //ASL
+            if ((opcode & 0x03) == 0x02) {
+                addressingMode = this.getAddressingMode(opcode, "X");
+                return execute ? undefined : `${pcText}, ASL ${addressingMode}: ${this.addressToString(this.getAddress(addressingMode))}`;
             }
         }
 
-        throw new Error("Unknown opcode");
+        return `${pcText}`;
+        //throw new Error(`Unknown opcode`);
     }
 
     /**
@@ -358,6 +507,7 @@ export class CPU {
             case "Accumulator":
                 break;
             case "Immediate":
+                address = this._register.programCounter;
                 break;
             case "ZeroPage":
                 address = this.readMemory(this._register.programCounter);
@@ -370,6 +520,7 @@ export class CPU {
                 break;
             case "Relative":
                 address = 0;
+                break;
             case "Absolute":
                 address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
                 break;
@@ -387,6 +538,8 @@ export class CPU {
             case "IndirectX":
                 break;
             case "IndirectY":
+                break;
+            case "Unknown":
                 break;
             default:
                 throw new Error("Unknown addressing mode");
@@ -437,7 +590,7 @@ export class CPU {
                 return "ZeroPage";
             }
             else if (opcode == 0x02) {
-
+                return "Accumulator";
             }
             else if (opcode == 0x03) {
                 return "Absolute";
@@ -482,7 +635,8 @@ export class CPU {
             }
         }
 
-        throw new Error("Unknown addressing mode");
+        return "Unknown";
+        //throw new Error("Unknown addressing mode");
 
     }
 

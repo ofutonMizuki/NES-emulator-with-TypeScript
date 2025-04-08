@@ -3,6 +3,7 @@ const nes = new NES();
 
 window.onload = () => {
     const romFileInput = document.getElementById("rom-file") as HTMLInputElement;
+    const assemblyCodeInput = document.getElementById("assembly-code") as HTMLInputElement;
 
     /**
      * ROMファイルが選択されたときの処理
@@ -26,7 +27,7 @@ window.onload = () => {
 
             try {
                 while(true){
-                    console.log(nes.deAssemble());
+                    assemblyCodeInput.value += nes.deAssemble() + "\n";
                 }
             } catch (error) {
                 console.error("Error deAssemble:", error);   

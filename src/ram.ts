@@ -16,11 +16,11 @@ export class RAM {
      */
     read(address: number) {
         if (address < 0) {
-            throw new Error("Memory is out of range");
+            throw new Error(`Memory is out of range. Address: ${address}`);
 
         }
         if (0x07FF < address) {
-            throw new Error("Memory is out of range");
+            //throw new Error(`Memory is out of range. Address: ${address}`);
         }
 
         return this._ram[address] & 0xFF;
@@ -33,11 +33,11 @@ export class RAM {
      */
     write(address: number, value: number) {
         if (address < 0) {
-            throw new Error("Memory is out of range");
+            throw new Error(`Memory is out of range. Address: ${address}`);
 
         }
         if (0x07FF < address) {
-            throw new Error("Memory is out of range");
+            throw new Error(`Memory is out of range. Address: ${address}`);
         }
 
         this._ram[address] = value & 0xFF;

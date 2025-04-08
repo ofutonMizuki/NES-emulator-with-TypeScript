@@ -4,6 +4,17 @@ export class ROM {
     private _prgromSize: number;
 
     /**
+     * プログラムROMのサイズ
+     */
+    get programSize() {
+        return this._prgromSize * 0x4000;
+    }
+
+    get prgrom() {
+        return this._prgrom;
+    }
+
+    /**
      * コンストラクタ
      * @param romData 
      */
@@ -53,7 +64,7 @@ export class ROM {
                 let sprite: number[][] = new Array(8);
                 for (let j = 0; j < 16; j++) {
                     sprite[j] = new Array(8);
-                    for(let k = 0; k < 8; k++) {
+                    for (let k = 0; k < 8; k++) {
                         sprite[j][k] = 0;
                     }
                 }
