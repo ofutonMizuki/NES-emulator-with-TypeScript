@@ -3,10 +3,13 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development', // 開発モード (production にすると最適化される)
-  entry: './src/index.ts', // エントリーポイント (最初に読み込まれるファイル)
+  entry: {
+    index: './src/index.ts',
+    deAssemble: './src/deAssemble.ts',
+  },
   output: {
-    path: path.resolve(__dirname, 'dist'), // 出力先ディレクトリ
-    filename: 'bundle.js', // 出力ファイル名
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist'),
   },
   module: {
     rules: [
@@ -22,7 +25,14 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html', // テンプレートとなる HTML ファイル
+      filename: 'index.html',
+      template: './src/index.html', // テンプレートとなる HTML ファイル,
+      chunks: ['index'],
+    }),
+    new HtmlWebpackPlugin({
+      filename: 'deAssemble.html',
+      template: './src/deAssemble.html', // テンプレートとなる HTML ファイル
+      chunks: ['deAssemble'],
     }),
   ],
   devServer: {
