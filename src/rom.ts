@@ -46,7 +46,7 @@ export class ROM {
 
         //PRG-ROMとCHR-ROMの分割
         this._prgrom = romData.slice(0x0010, chRomStart);
-        console.dir("PRG-ROM", this._prgrom);
+        console.log("PRG-ROM size: ", this._prgrom.length);
         this._chrrom = romData.slice(chRomStart, chRomEnd);
 
         if (debugCanvas) {
@@ -96,7 +96,7 @@ export class ROM {
      * @returns 
      */
     readPrgrom(address: number): number {
-        return this._prgromSize == 1 ? this._prgrom[address] & 0x3FFF : this._prgrom[address];
+        return (this._prgromSize == 1) ? (this._prgrom[address & 0x3FFF]) : (this._prgrom[address]);
     }
 
     /**
