@@ -26,6 +26,7 @@ window.onload = () => {
             nes.initDeAssemble();
 
             try {
+                assemblyCodeInput.value = "";
                 while(true){
                     assemblyCodeInput.value += nes.deAssemble() + "\n";
                 }
