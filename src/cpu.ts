@@ -503,59 +503,62 @@ export class CPU {
         let address: Address | undefined = undefined;
         switch (addressingMode) {
             case "Implied":
+                // アドレスは不要
                 break;
             case "Accumulator":
+                // アドレスは不要
                 break;
             case "Immediate":
                 address = this._register.programCounter;
                 break;
             case "ZeroPage":
-                address = this.readMemory(this._register.programCounter);
+                address = this.readMemory(this._register.programCounter) & 0xFF;
                 break;
             case "ZeroPageX":
-                address = this.readMemory(this._register.programCounter) + this._register.indexRegisterX;
+                address = (this.readMemory(this._register.programCounter) + this._register.indexRegisterX) & 0xFF;
                 break;
             case "ZeroPageY":
-                address = this.readMemory(this._register.programCounter) + this._register.indexRegisterY;
+                address = (this.readMemory(this._register.programCounter) + this._register.indexRegisterY) & 0xFF;
                 break;
             case "Relative":
-                address = 0;
+                const offset = this.readMemory(this._register.programCounter);
+                address = (this._register.programCounter + 1 + (offset < 0x80 ? offset : offset - 0x100)) & 0xFFFF;
                 break;
             case "Absolute":
-                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
+                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter + 1) << 8);
                 break;
             case "AbsoluteX":
-                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterX;
+                address = (this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter + 1) << 8)) + this._register.indexRegisterX;
                 break;
             case "AbsoluteY":
-                address = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8) + this._register.indexRegisterY;
+                address = (this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter + 1) << 8)) + this._register.indexRegisterY;
                 break;
             case "Indirect":
-                if (execute) {
-                    //間接参照
-                    tempAddress = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
-                    address = this.readMemory(tempAddress) | (this.readMemory(tempAddress + 1) << 8);
+                tempAddress = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter + 1) << 8);
+                if ((tempAddress & 0xFF) === 0xFF) {
+                    // ページ境界をまたぐ場合のバグを再現
+                    address = this.readMemory(tempAddress) | (this.readMemory(tempAddress & 0xFF00) << 8);
                 } else {
-                    //間接参照
-                    tempAddress = this.readMemory(this._register.programCounter) | (this.readMemory(this._register.programCounter++) << 8);
-                    //address = this.readMemory(tempAddress) | (this.readMemory(tempAddress + 1) << 8);
-                    address = tempAddress;
+                    address = this.readMemory(tempAddress) | (this.readMemory(tempAddress + 1) << 8);
                 }
                 break;
             case "IndirectX":
+                tempAddress = (this.readMemory(this._register.programCounter) + this._register.indexRegisterX) & 0xFF;
+                address = this.readMemory(tempAddress) | (this.readMemory((tempAddress + 1) & 0xFF) << 8);
                 break;
             case "IndirectY":
+                tempAddress = this.readMemory(this._register.programCounter) & 0xFF;
+                address = (this.readMemory(tempAddress) | (this.readMemory((tempAddress + 1) & 0xFF) << 8)) + this._register.indexRegisterY;
                 break;
             case "Unknown":
-                break;
-            default:
                 throw new Error("Unknown addressing mode");
+            default:
+                throw new Error("Unhandled addressing mode");
         }
 
         this._register.programCounter++;
         return address;
     }
-
 
     private getAddressingMode(opcode: number, type: AddressingType): AddressingMode {
         opcode = opcode & 0x1F;
